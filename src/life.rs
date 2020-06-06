@@ -1,5 +1,4 @@
 use super::bitfield::Bitfield;
-use super::cell::Cell;
 use super::xorshift::xorshift;
 use std::array::IntoIter;
 use std::io::{self, Write};
@@ -31,7 +30,12 @@ pub struct Life {
 }
 
 impl Life {
-  pub fn new(width: usize, height: usize, seed: u64) -> Self {
+  pub fn new(width: usize, height: usize) -> Self {
+    let cells = Bitfield::new(width * height);
+    Self { width, height, cells }
+  }
+
+  pub fn randomized(width: usize, height: usize, seed: u64) -> Self {
     let mut next = xorshift(seed);
 
     let bytes = iter::from_fn(move || Some(next()))
@@ -49,8 +53,8 @@ impl Life {
     self.width * y + x
   }
 
-  pub fn cell_at(&self, x: usize, y: usize) -> Cell {
-    Cell::from_bool(self.cells.at(self.to_index(x, y)))
+  pub fn is_alive_at(&self, x: usize, y: usize) -> bool {
+    self.cells.at(self.to_index(x, y))
   }
 
   pub fn neighbors(&self, x: usize, y: usize) -> usize {
@@ -58,7 +62,7 @@ impl Life {
       .filter(|(u, v)| {
         let x = (x + u).wrapping_sub(1);
         let y = (y + v).wrapping_sub(1);
-        self.cell_at(x, y).is_alive()
+        self.is_alive_at(x, y)
       })
       .map(|_| 1)
       .sum()
@@ -69,7 +73,7 @@ impl Life {
 
     for y in 0..self.height {
       for x in 0..self.width {
-        let c = self.cell_at(x, y);
+        let c = self.is_alive_at(x, y);
         let n = self.neighbors(x, y);
         if RULES[c as usize] >> n & 1 == 1 {
           cells.flip(self.to_index(x, y))
@@ -87,7 +91,7 @@ impl Life {
     for y in (0..self.height).step_by(4) {
       for x in (0..self.width).step_by(2) {
         let byte = BRAILLE.iter()
-          .filter(|((u, v), _)| self.cell_at(x + u, y + v).is_alive())
+          .filter(|((u, v), _)| self.is_alive_at(x + u, y + v))
           .map(|(_, bit)| bit)
           .fold(0xff, |a, b| a ^ b);
 

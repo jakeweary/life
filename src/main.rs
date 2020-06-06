@@ -1,7 +1,6 @@
 #![feature(array_value_iter)]
 
 mod bitfield;
-mod cell;
 mod life;
 mod xorshift;
 
@@ -16,7 +15,7 @@ fn main() {
     .unwrap()
     .as_millis() as u64;
 
-  let mut life = Life::new(2 * w, 4 * h, time);
+  let mut life = Life::randomized(2 * w, 4 * h, time);
   loop {
     life.render();
     life.step();
