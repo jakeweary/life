@@ -16,14 +16,16 @@ impl Bitfield {
 
   pub fn at(&self, i: usize) -> bool {
     assert!(i < self.size);
+    let byte = unsafe { self.bytes.get_unchecked(i / 8) };
     let mask = 1 << i % 8;
-    *unsafe { self.bytes.get_unchecked(i / 8) } & mask != 0
+    *byte & mask != 0
   }
 
   pub fn flip(&mut self, i: usize) {
     assert!(i < self.size);
+    let byte = unsafe { self.bytes.get_unchecked_mut(i / 8) };
     let mask = 1 << i % 8;
-    *unsafe { self.bytes.get_unchecked_mut(i / 8) } ^= mask;
+    *byte ^= mask;
   }
 
   pub fn size(&self) -> usize {
