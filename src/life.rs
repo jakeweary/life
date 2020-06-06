@@ -17,11 +17,11 @@ const NEIGHBORS: [(usize, usize); 8] = [
   (0, 2), (1, 2), (2, 2)
 ];
 
-const BRAILLE: [(usize, usize, u8); 8] = [
-  (0, 0, 1 << 0), (1, 0, 1 << 3), // ●₀ ●₃
-  (0, 1, 1 << 1), (1, 1, 1 << 4), // ●₁ ●₄
-  (0, 2, 1 << 2), (1, 2, 1 << 5), // ●₂ ●₅
-  (0, 3, 1 << 6), (1, 3, 1 << 7)  // ○₆ ○₇
+const BRAILLE: [((usize, usize), u8); 8] = [
+  ((0, 0), 1 << 0), ((1, 0), 1 << 3), // ●₀ ●₃
+  ((0, 1), 1 << 1), ((1, 1), 1 << 4), // ●₁ ●₄
+  ((0, 2), 1 << 2), ((1, 2), 1 << 5), // ●₂ ●₅
+  ((0, 3), 1 << 6), ((1, 3), 1 << 7)  // ○₆ ○₇
 ];
 
 pub struct Life {
@@ -83,8 +83,8 @@ impl Life {
     for y in (0..self.height).step_by(4) {
       for x in (0..self.width).step_by(2) {
         let byte = BRAILLE.iter()
-          .filter(|(u, v, _)| self.at(x + u, y + v).is_alive())
-          .map(|(_, _, bit)| bit)
+          .filter(|((u, v), _)| self.at(x + u, y + v).is_alive())
+          .map(|(_, bit)| bit)
           .fold(0, |a, b| a | b);
 
         let c = 0x2800 | byte as u32;
