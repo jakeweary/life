@@ -7,8 +7,8 @@ use std::iter;
 
 const RULES: [u16; 2] = [
   // 876543210 neighbors alive
-  0b_000001000, // dead
-  0b_000001100  // alive
+  0b_000001000, // 1 - dead cell becomes alive
+  0b_000001100  // 1 - alive cell stays alive
 ];
 
 const NEIGHBORS: [(usize, usize); 8] = [
@@ -44,18 +44,22 @@ impl Life {
   }
 
   pub fn to_index(&self, x: usize, y: usize) -> usize {
-    let x = (x + self.width) % self.width;
-    let y = (y + self.height) % self.height;
+    let x = x.wrapping_add(self.width)  % self.width;
+    let y = y.wrapping_add(self.height) % self.height;
     self.width * y + x
   }
 
-  pub fn at(&self, x: usize, y: usize) -> Cell {
+  pub fn cell_at(&self, x: usize, y: usize) -> Cell {
     Cell::from_bool(self.cells.at(self.to_index(x, y)))
   }
 
   pub fn neighbors(&self, x: usize, y: usize) -> usize {
     NEIGHBORS.iter()
-      .filter(|(u, v)| self.at(x + u - 1, y + v - 1).is_alive())
+      .filter(|(u, v)| {
+        let x = (x + u).wrapping_sub(1);
+        let y = (y + v).wrapping_sub(1);
+        self.cell_at(x, y).is_alive()
+      })
       .map(|_| 1)
       .sum()
   }
@@ -65,7 +69,7 @@ impl Life {
 
     for y in 0..self.height {
       for x in 0..self.width {
-        let c = self.at(x, y);
+        let c = self.cell_at(x, y);
         let n = self.neighbors(x, y);
         if RULES[c as usize] >> n & 1 == 1 {
           cells.flip(self.to_index(x, y))
@@ -83,9 +87,9 @@ impl Life {
     for y in (0..self.height).step_by(4) {
       for x in (0..self.width).step_by(2) {
         let byte = BRAILLE.iter()
-          .filter(|((u, v), _)| self.at(x + u, y + v).is_alive())
+          .filter(|((u, v), _)| self.cell_at(x + u, y + v).is_alive())
           .map(|(_, bit)| bit)
-          .fold(0, |a, b| a | b);
+          .fold(0xff, |a, b| a ^ b);
 
         let c = 0x2800 | byte as u32;
         let c = unsafe { std::char::from_u32_unchecked(c) };
