@@ -1,10 +1,11 @@
 use super::bitfield::Bitfield;
-use super::xorshift::xorshift;
 use super::cell::Cell;
+use super::xorshift::xorshift;
+use std::array::IntoIter;
 use std::io::{self, Write};
-use std::{array::IntoIter, iter};
+use std::iter;
 
-const RULES: [usize; 2] = [
+const RULES: [u16; 2] = [
   // 876543210 neighbors alive
   0b_000001000, // dead
   0b_000001100  // alive
@@ -16,7 +17,7 @@ const NEIGHBORS: [(usize, usize); 8] = [
   (0, 2), (1, 2), (2, 2)
 ];
 
-const BRAILLE: [(usize, usize, usize); 8] = [
+const BRAILLE: [(usize, usize, u8); 8] = [
   (0, 0, 1 << 0), (1, 0, 1 << 3), // ●₀ ●₃
   (0, 1, 1 << 1), (1, 1, 1 << 4), // ●₁ ●₄
   (0, 2, 1 << 2), (1, 2, 1 << 5), // ●₂ ●₅
