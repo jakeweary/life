@@ -85,22 +85,22 @@ impl Life {
   }
 
   pub fn render(&self) {
-    // clear terminal
-    print!("\x1b[2J\x1b[1;1H");
+    let mut s = String::with_capacity(self.width * self.height >> 3);
 
     for y in (0..self.height).step_by(4) {
       for x in (0..self.width).step_by(2) {
         let byte = BRAILLE.iter()
           .filter(|((u, v), _)| self.is_alive_at(x + u, y + v))
           .map(|(_, bit)| bit)
-          .fold(0xff, |a, b| a ^ b);
+          .fold(0, |a, b| a | b);
 
         let c = 0x2800 | byte as u32;
         let c = unsafe { std::char::from_u32_unchecked(c) };
-        print!("{}", c);
+        s.push(c);
       }
-
-      io::stdout().flush().unwrap();
     }
+
+    print!("\x1b[2J\x1b[1;1H{}", s);
+    io::stdout().flush().unwrap();
   }
 }
