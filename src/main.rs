@@ -5,6 +5,7 @@ mod life;
 mod xorshift;
 
 use life::Life;
+use std::io::{self, Write};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -17,7 +18,9 @@ fn main() {
 
   let mut life = Life::randomized(2 * w, 4 * h, time);
   loop {
-    life.render();
+
+    print!("\x1b[2J\x1b[1;1H{}", life.render());
+    io::stdout().flush().unwrap();
     life.step();
     // thread::sleep(Duration::from_millis(10));
   }
