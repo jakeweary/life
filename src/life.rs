@@ -15,11 +15,11 @@ const NEIGHBORS: [(usize, usize); 8] = [
   (0, 2), (1, 2), (2, 2)
 ];
 
-const BRAILLE: [((usize, usize), u8); 8] = [
-  ((0, 0), 1 << 0), ((1, 0), 1 << 3), // ●₀ ●₃
-  ((0, 1), 1 << 1), ((1, 1), 1 << 4), // ●₁ ●₄
-  ((0, 2), 1 << 2), ((1, 2), 1 << 5), // ●₂ ●₅
-  ((0, 3), 1 << 6), ((1, 3), 1 << 7)  // ○₆ ○₇
+const BRAILLE: [(usize, usize, u8); 8] = [
+  (0, 0, 1 << 0), (1, 0, 1 << 3), // ●₀ ●₃
+  (0, 1, 1 << 1), (1, 1, 1 << 4), // ●₁ ●₄
+  (0, 2, 1 << 2), (1, 2, 1 << 5), // ●₂ ●₅
+  (0, 3, 1 << 6), (1, 3, 1 << 7)  // ○₆ ○₇
 ];
 
 pub struct Life {
@@ -59,8 +59,7 @@ impl Life {
         let y = (y + v + self.height - 1) % self.height;
         self.is_alive(x, y)
       })
-      .map(|_| 1)
-      .sum()
+      .count()
   }
 
   pub fn step(&mut self) {
@@ -83,8 +82,8 @@ impl Life {
     (0..self.height).step_by(4).flat_map(|y| {
       (0..self.width).step_by(2).map(move |x| {
         let byte = BRAILLE.iter()
-          .filter(move |((u, v), _)| self.is_alive(x + u, y + v))
-          .map(|(_, bit)| bit)
+          .filter(move |(u, v, ..)| self.is_alive(x + u, y + v))
+          .map(|(.., bit)| bit)
           .fold(0, |a, b| a | b);
 
         let code = 0x2800 | byte as u32;
