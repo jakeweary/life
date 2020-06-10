@@ -14,21 +14,47 @@ impl Bitfield {
     Self { size, bytes }
   }
 
-  pub fn at(&self, i: usize) -> bool {
-    assert!(i < self.size);
-    let byte = unsafe { self.bytes.get_unchecked(i / 8) };
-    let mask = 1 << i % 8;
-    *byte & mask != 0
+  pub fn size(&self) -> usize {
+    self.size
+  }
+
+  pub fn get(&self, i: usize) -> bool {
+    let (byte, shift) = self.pair(i);
+    *byte & (1 << shift) != 0
+  }
+
+  pub fn set(&mut self, i: usize, v: bool) {
+    let (byte, shift) = self.pair_mut(i);
+    *byte &= !(1 << shift);
+    *byte |= (v as u8) << shift;
+  }
+
+  pub fn off(&mut self, i: usize) {
+    let (byte, shift) = self.pair_mut(i);
+    *byte &= !(1 << shift);
+  }
+
+  pub fn on(&mut self, i: usize) {
+    let (byte, shift) = self.pair_mut(i);
+    *byte |= 1 << shift;
   }
 
   pub fn flip(&mut self, i: usize) {
-    assert!(i < self.size);
-    let byte = unsafe { self.bytes.get_unchecked_mut(i / 8) };
-    let mask = 1 << i % 8;
-    *byte ^= mask;
+    let (byte, shift) = self.pair_mut(i);
+    *byte ^= 1 << shift;
   }
 
-  pub fn size(&self) -> usize {
-    self.size
+  fn pair(&self, i: usize) -> (&u8, usize) {
+    debug_assert!(i < self.size);
+    let byte = unsafe { self.bytes.get_unchecked(i / 8) };
+    let shift = i % 8;
+    (byte, shift)
+  }
+
+  fn pair_mut(&mut self, i: usize) -> (&mut u8, usize) {
+    debug_assert!(i < self.size);
+    let byte = unsafe { self.bytes.get_unchecked_mut(i / 8) };
+    let shift = i % 8;
+    (byte, shift)
   }
 }

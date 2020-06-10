@@ -1,5 +1,5 @@
 use super::bitfield::Bitfield;
-use super::xorshift::xorshift;
+use super::xorshift::Xorshift;
 use std::array::IntoIter;
 use std::iter;
 
@@ -29,15 +29,10 @@ pub struct Life {
 }
 
 impl Life {
-  pub fn new(width: usize, height: usize) -> Self {
-    let cells = Bitfield::new(width * height);
-    Self { width, height, cells }
-  }
-
   pub fn randomized(width: usize, height: usize, seed: u64) -> Self {
-    let mut next = xorshift(seed);
+    let mut xs = Xorshift::new(seed);
 
-    let bytes = iter::from_fn(move || Some(next()))
+    let bytes = iter::from_fn(|| Some(xs.next_u64()))
       .flat_map(|n| IntoIter::new(n.to_ne_bytes()))
       .take(width * height >> 3)
       .collect();
@@ -53,7 +48,7 @@ impl Life {
   }
 
   pub fn is_alive_at(&self, x: usize, y: usize) -> bool {
-    self.cells.at(self.to_index(x, y))
+    self.cells.get(self.to_index(x, y))
   }
 
   pub fn neighbors(&self, x: usize, y: usize) -> usize {
