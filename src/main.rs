@@ -1,4 +1,5 @@
 #![feature(array_value_iter)]
+#![allow(dead_code)]
 
 mod bitfield;
 mod life;
@@ -6,8 +7,7 @@ mod xorshift;
 
 use life::Life;
 use std::io::{self, Write};
-use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
   let (w, h) = term_size::dimensions().unwrap();
@@ -21,6 +21,5 @@ fn main() {
     print!("\x1b[2J\x1b[1;1H{}", life.render());
     io::stdout().flush().unwrap();
     life.step();
-    // thread::sleep(Duration::from_millis(10));
   }
 }

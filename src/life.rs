@@ -42,21 +42,22 @@ impl Life {
   }
 
   pub fn to_index(&self, x: usize, y: usize) -> usize {
-    let x = x.wrapping_add(self.width)  % self.width;
-    let y = y.wrapping_add(self.height) % self.height;
+    debug_assert!(x < self.width && y < self.height);
     self.width * y + x
   }
 
-  pub fn is_alive_at(&self, x: usize, y: usize) -> bool {
+  pub fn is_alive(&self, x: usize, y: usize) -> bool {
     self.cells.get(self.to_index(x, y))
   }
 
   pub fn neighbors(&self, x: usize, y: usize) -> usize {
+    debug_assert!(x < self.width && y < self.height);
+
     NEIGHBORS.iter()
-      .filter(|(u, v)| {
-        let x = (x + u).wrapping_sub(1);
-        let y = (y + v).wrapping_sub(1);
-        self.is_alive_at(x, y)
+      .filter(move |(u, v)| {
+        let x = (x + u + self.width  - 1) % self.width;
+        let y = (y + v + self.height - 1) % self.height;
+        self.is_alive(x, y)
       })
       .map(|_| 1)
       .sum()
@@ -67,7 +68,7 @@ impl Life {
 
     for y in 0..self.height {
       for x in 0..self.width {
-        let c = self.is_alive_at(x, y);
+        let c = self.is_alive(x, y);
         let n = self.neighbors(x, y);
         if RULES[c as usize] >> n & 1 == 1 {
           cells.flip(self.to_index(x, y))
@@ -82,7 +83,7 @@ impl Life {
     (0..self.height).step_by(4).flat_map(|y| {
       (0..self.width).step_by(2).map(move |x| {
         let byte = BRAILLE.iter()
-          .filter(|((u, v), _)| self.is_alive_at(x + u, y + v))
+          .filter(move |((u, v), _)| self.is_alive(x + u, y + v))
           .map(|(_, bit)| bit)
           .fold(0, |a, b| a | b);
 
