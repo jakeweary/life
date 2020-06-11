@@ -1,3 +1,5 @@
+use std::iter::{FromIterator, IntoIterator};
+
 pub struct Bitfield {
   size: usize,
   bytes: Vec<u8>
@@ -56,5 +58,13 @@ impl Bitfield {
     let byte = unsafe { self.bytes.get_unchecked_mut(i / 8) };
     let shift = i % 8;
     (byte, shift)
+  }
+}
+
+impl FromIterator<u8> for Bitfield {
+  fn from_iter<I>(iter: I) -> Self
+  where I: IntoIterator<Item = u8> {
+    let bytes = iter.into_iter().collect();
+    Bitfield::from_bytes(bytes)
   }
 }

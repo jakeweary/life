@@ -8,14 +8,31 @@ impl Xorshift {
   }
 
   pub fn next_u64(&mut self) -> u64 {
-    self.state ^= self.state << 13;
-    self.state ^= self.state >> 7;
-    self.state ^= self.state << 17;
+    self.state = next(self.state);
     self.state
   }
 
   pub fn next_f64(&mut self) -> f64 {
-    let bits = 0x3ff<<52 | self.next_u64()>>12;
-    f64::from_bits(bits) - 1.0
+    norm(self.next_u64())
   }
+}
+
+impl Iterator for Xorshift {
+  type Item = u64;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    Some(self.next_u64())
+  }
+}
+
+pub fn next(mut n: u64) -> u64 {
+  n ^= n << 13;
+  n ^= n >> 7;
+  n ^= n << 17;
+  n
+}
+
+pub fn norm(mut n: u64) -> f64 {
+  n = 0x3ff<<52 | n>>12;
+  f64::from_bits(n) - 1.0
 }

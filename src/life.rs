@@ -1,7 +1,6 @@
 use super::bitfield::Bitfield;
 use super::xorshift::Xorshift;
 use std::array::IntoIter;
-use std::iter;
 
 const RULES: [u16; 2] = [
   // 876543210 neighbors alive
@@ -30,14 +29,11 @@ pub struct Life {
 
 impl Life {
   pub fn randomized(width: usize, height: usize, seed: u64) -> Self {
-    let mut xs = Xorshift::new(seed);
-
-    let bytes = iter::from_fn(|| Some(xs.next_u64()))
+    let cells = Xorshift::new(seed)
       .flat_map(|n| IntoIter::new(n.to_ne_bytes()))
       .take(width * height >> 3)
       .collect();
 
-    let cells = Bitfield::from_bytes(bytes);
     Self { width, height, cells }
   }
 
@@ -79,16 +75,23 @@ impl Life {
   }
 
   pub fn render(&self) -> String {
-    (0..self.height).step_by(4).flat_map(|y| {
-      (0..self.width).step_by(2).map(move |x| {
-        let byte = BRAILLE.iter()
-          .filter(move |(u, v, ..)| self.is_alive(x + u, y + v))
-          .map(|(.., bit)| bit)
-          .fold(0, |a, b| a | b);
+    let render = |x, y| {
+      let byte = BRAILLE.iter()
+        .filter(|(u, v, ..)| self.is_alive(x + u, y + v))
+        .map(|(.., bit)| bit)
+        .fold(0, |a, b| a | b);
 
-        let code = 0x2800 | byte as u32;
-        unsafe { std::char::from_u32_unchecked(code) }
+      let code = 0x2800 | byte as u32;
+      unsafe { std::char::from_u32_unchecked(code) }
+    };
+
+    (0..self.height)
+      .step_by(4)
+      .flat_map(|y| {
+        (0..self.width)
+          .step_by(2)
+          .map(move |x| render(x, y))
       })
-    }).collect()
+      .collect()
   }
 }
